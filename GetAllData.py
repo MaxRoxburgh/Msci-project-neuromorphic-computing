@@ -10,8 +10,9 @@ import numpy as np
 import os
 import glob
 from sklearn.model_selection import train_test_split
+from tools import add_padding_to_images
 
-def get_all_data():
+def get_all_data(pad=False, size=95):
     """
     Returns
     -------
@@ -28,12 +29,23 @@ def get_all_data():
     input_path = path + "\\source_images\\isic12_95.ds"
     
     # All input data
-    input_rot0 = ds.load(input_path).raw
+    inputs = ds.load(input_path).raw
+    
+    rot = 0
+    input_rot0 = np.rot90(inputs, -1+rot, axes=(1, 2))
+    
     rot = 1
-    input_rot1 = np.rot90(input_rot0, -1+rot, axes=(1, 2))
+    input_rot1 = np.rot90(inputs, -1+rot, axes=(1, 2))
     
     x_total = np.concatenate((input_rot0, input_rot1), axis=0)
-    
+    if pad:
+        x_total = add_padding_to_images(x_total, 138, 100)
+        # import matplotlib.pyplot as plt
+        # plt.imshow(x_total[0])
+        # plt.show()
+        # plt.imshow(x_total[1])
+        # plt.show()
+        
     # All output data
     y_total = ds.load(spectrum_paths_rot0[0]).raw
     
@@ -46,9 +58,7 @@ def get_all_data():
         y_total = np.concatenate((y_total, y_temp))
         
     y_total = y_total[:,10:74,65:193].reshape(len(x_total),64,64,2).mean(axis=-1).reshape(len(x_total),64,64,1)
-    x_total = x_total.reshape(len(x_total),95,95,1)
+    x_total = x_total.reshape(len(x_total),size,size,1)
     
         
     return train_test_split(x_total, y_total, test_size=0.1, random_state=42)
-    
-    
