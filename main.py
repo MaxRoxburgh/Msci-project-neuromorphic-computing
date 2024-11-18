@@ -30,7 +30,7 @@ print(tf.config.list_physical_devices('GPU'))
 print('\nRunning on cuda:', tf.test.is_built_with_cuda())
 
 
-def main(model, model_num, pad=False):#args):
+def main(model, model_num, pad=False, ep=150):#args):
     
     ###########################################################################
     # getting data
@@ -90,7 +90,7 @@ def main(model, model_num, pad=False):#args):
     # model training
     
     print('\nTraining ...\n')
-    input("press something to continue")
+    # input("press something to continue")
     start_time = time.time()
     
     # train
@@ -98,7 +98,6 @@ def main(model, model_num, pad=False):#args):
     print("batch size:", batch_size)
     # steps_per_epoch = number of test data/ batch_size
     # steps_per_epoch = 200
-    ep = 150
     print("epochs:", ep)
     history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=0, validation_data=[x_val, y_val],
                               batch_size=batch_size)#, steps_per_epoch=steps_per_epoch)
@@ -130,6 +129,9 @@ if __name__ == "__main__":
     parser.add_argument(
         '-m', '--model-number', dest='model_num', required=True, type=int,
         help='Model number for identification')
+    parser.add_argument(
+        '-e', '--epochs', dest='ep', required=False, type=int,
+        help='Number of epochs for training')
     args = parser.parse_args()
 
 if args.model_num == 1:
@@ -151,7 +153,12 @@ else:
     args.model_num = 6
     from models import unet_model_6
     model = unet_model_6  
-    
-main(model, model_num=f"{args.model_num}", pad=True)    
+
+if not ep:
+    print("got to here")
+    main(model, model_num=f"{args.model_num}", pad=True)    
+else:
+    print("preset the ep to", args.ep)
+    main(model, model_num=f"{args.model_num}", pad=True, ep=args.ep)    
     
     
