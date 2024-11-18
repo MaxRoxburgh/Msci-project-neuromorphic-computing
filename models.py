@@ -308,4 +308,85 @@ def unet_model_4(IMG_SHAPE, RESULT_SHAPE):
     return input_net, output_net
 
 def unet_model_5(IMG_SHAPE, RESULT_SHAPE):
-    pass
+    """
+    Same as model 3 but with reduced number of kernels to help reduce size
+    """
+        
+    input_net = Input(IMG_SHAPE) # make inputs 138,138
+    
+    # set parameters
+    ker_init = 'glorot_normal'
+    drop = 0.0655936065918576
+    drop_mid = 0.21194937479704087
+    
+    F_list = [30, 60, 90, 105, 3]    
+    
+    # ENCODER
+    enc3 = encoder_sub_block(input_net, NumFilter1=F_list[0], NumFilter2=F_list[1], KernelSize1=(5,5), 
+                      KernelSize2=(3,3), DropoutRate=drop, DonwsampleSize=(3,3), ker_init=ker_init)
+
+    enc4, enc5, enc6 = encoder_sub_block(enc3, F_list[2], F_list[2], (5,5),(5,5), drop, (3,3), ker_init, all_encoders=True)
+    enc8 = encoder_mid_block(enc6, NumFilter1=F_list[3], NumFilter2=F_list[3], DropoutMid=drop_mid, ker_init=ker_init)
+
+
+    ## DECODER
+    dec0 = Conv2DTranspose(F_list[2], (3, 3), strides=(3, 3))(enc8)
+    merge1 = concatenate([dec0, enc5])
+    
+    dec1 = Conv2D(F_list[2], (5, 5), activation='relu', kernel_initializer=ker_init)(merge1)
+    dec2 = Conv2D(55, (5, 5), activation='relu', kernel_initializer=ker_init)(dec1)
+    dec3 = Conv2D(50, (5, 5), activation='relu', kernel_initializer=ker_init)(dec2)
+    dec4 = Conv2D(45, (3,3), activation='relu', kernel_initializer=ker_init)(dec3)
+    dec5 = Conv2DTranspose(F_list[1], (2, 2), strides=(2, 2))(dec4)
+    
+    merge2 = concatenate([dec5, enc3])
+    dec6 = Conv2D(F_list[1], (3, 3), activation='relu', kernel_initializer=ker_init)(merge2)
+    dec7 = Conv2D(F_list[4], (3, 3), activation='relu', kernel_initializer=ker_init)(dec6)
+    
+    dec8 = Flatten()(dec7)
+    dec9 = Dense(np.prod(RESULT_SHAPE))(dec8)
+    output_net = Reshape(RESULT_SHAPE)(dec9)
+
+    return input_net, output_net
+
+def unet_model_6(IMG_SHAPE, RESULT_SHAPE):
+    """
+    Same as model 3 but with reduced number of kernels to help reduce size
+    """
+        
+    input_net = Input(IMG_SHAPE) # make inputs 138,138
+    
+    # set parameters
+    ker_init = 'glorot_normal'
+    drop = 0.0655936065918576
+    drop_mid = 0.21194937479704087
+    
+    F_list = [30, 60, 90, 105, 4]    
+    
+    # ENCODER
+    enc3 = encoder_sub_block(input_net, NumFilter1=F_list[0], NumFilter2=F_list[1], KernelSize1=(5,5), 
+                      KernelSize2=(3,3), DropoutRate=drop, DonwsampleSize=(3,3), ker_init=ker_init)
+
+    enc4, enc5, enc6 = encoder_sub_block(enc3, F_list[2], F_list[2], (5,5),(5,5), drop, (3,3), ker_init, all_encoders=True)
+    enc8 = encoder_mid_block(enc6, NumFilter1=F_list[3], NumFilter2=F_list[3], DropoutMid=drop_mid, ker_init=ker_init)
+
+
+    ## DECODER
+    dec0 = Conv2DTranspose(F_list[2], (3, 3), strides=(3, 3))(enc8)
+    merge1 = concatenate([dec0, enc5])
+    
+    dec1 = Conv2D(F_list[2], (5, 5), activation='relu', kernel_initializer=ker_init)(merge1)
+    dec2 = Conv2D(55, (5, 5), activation='relu', kernel_initializer=ker_init)(dec1)
+    dec3 = Conv2D(50, (5, 5), activation='relu', kernel_initializer=ker_init)(dec2)
+    dec4 = Conv2D(45, (3,3), activation='relu', kernel_initializer=ker_init)(dec3)
+    dec5 = Conv2DTranspose(F_list[1], (2, 2), strides=(2, 2))(dec4)
+    
+    merge2 = concatenate([dec5, enc3])
+    dec6 = Conv2D(F_list[1], (3, 3), activation='relu', kernel_initializer=ker_init)(merge2)
+    dec7 = Conv2D(F_list[4], (3, 3), activation='relu', kernel_initializer=ker_init)(dec6)
+    
+    dec8 = Flatten()(dec7)
+    dec9 = Dense(np.prod(RESULT_SHAPE))(dec8)
+    output_net = Reshape(RESULT_SHAPE)(dec9)
+
+    return input_net, output_net
