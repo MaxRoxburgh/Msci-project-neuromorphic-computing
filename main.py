@@ -155,10 +155,10 @@ else:
     model = unet_model_6  
 
 if not args.ep:
-    print("got to here")
+    input("got to here")
     main(model, model_num=f"{args.model_num}", pad=True)    
 else:
-    print("preset the ep to", args.ep)
+    input("preset the ep to" + str(args.ep))
     main(model, model_num=f"{args.model_num}", pad=True, ep=args.ep)    
     
     
