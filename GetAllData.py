@@ -24,8 +24,8 @@ def get_all_data(pad=False, size=95):
     path = os.getcwd().replace("\\", "/") + "/twin_data"
     # path = "C:/Users/Maxwell/Imperial College London/complex nanophotonics - PH - 20241101_sanity checks"
     
-    spectrum_paths_rot0 = glob.glob(path + "/data/isic12_95_gTrue_rot0_/*[0-9].ds")
-    spectrum_paths_rot1 = glob.glob(path + "/data/isic12_95_gTrue_rot1_/*[0-9].ds")
+    spectrum_paths_rot0 = glob.glob(path + "/data/isic12_95_gTrue_rot0_/*[0-9].ds").replace("\\", "/")
+    spectrum_paths_rot1 = glob.glob(path + "/data/isic12_95_gTrue_rot1_/*[0-9].ds").replace("\\", "/")
     input_path = path + "/source_images/isic12_95.ds"
     
     # All input data
