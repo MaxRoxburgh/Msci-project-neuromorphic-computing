@@ -151,13 +151,9 @@ def add_padding_to_images(input_array, new_size, padding_value=0):
     padding_width = (new_size - original_width) // 2
     
     # Create padded array
-    padded_array = np.full((n_images, new_size, new_size), 1, dtype=input_array.dtype)
+    padded_array = np.full((n_images, new_size, new_size), padding_value, dtype=input_array.dtype)
     
-    # Make the background the mode colour
-    from statistics import mode
-    modes = [mode(i.flatten()) for i in input_array]
-    padded_array = np.array([i*j for i, j in zip(padded_array, modes)])
-    
+
     # Copy original images into the center of the new array
     for i in range(n_images):
         padded_array[i,

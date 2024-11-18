@@ -102,10 +102,10 @@ def main(model, model_num, pad=False):#args):
                               batch_size=batch_size)#, steps_per_epoch=steps_per_epoch)
 
     # plot and save loss history
-    dir_folder = os.getcwd() + f"\\history\\model_{model_num}"
+    dir_folder = os.getcwd().replace("\\", "/") + f"/history/model_{model_num}"
     os.makedirs(dir_folder, exist_ok=True)
     pl.losshistory(history.history, dir_folder, True)#args.plot_show)
-    with open(dir_folder + '\\losshistory-dict','wb') as file:
+    with open(dir_folder + '/losshistory-dict','wb') as file:
         pickle.dump(history.history, file)
         
     end_time = time.time()-start_time
@@ -115,7 +115,7 @@ def main(model, model_num, pad=False):#args):
     ###########################################################################
     # save model
     
-    autoencoder.save(dir_folder + f"\\model_updated_size{model_num}.keras")
+    autoencoder.save(dir_folder + f"/model_updated_size{model_num}.keras")
 
     print("\nSaved model to disk")
 

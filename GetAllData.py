@@ -21,12 +21,12 @@ def get_all_data(pad=False, size=95):
     """
 
     # Take relevant paths
-    # path = os.getcwd() + "\\twin_data"
-    path = "C:\\Users\\Maxwell\\Imperial College London\\complex nanophotonics - PH - 20241101_sanity checks"
+    path = os.getcwd().replace("\\", "/") + "/twin_data"
+    # path = "C:/Users/Maxwell/Imperial College London/complex nanophotonics - PH - 20241101_sanity checks"
     
-    spectrum_paths_rot0 = glob.glob(path + "\\data\\isic12_95_gTrue_rot0_\\*[0-9].ds")
-    spectrum_paths_rot1 = glob.glob(path + "\\data\\isic12_95_gTrue_rot1_\\*[0-9].ds")
-    input_path = path + "\\source_images\\isic12_95.ds"
+    spectrum_paths_rot0 = glob.glob(path + "/data/isic12_95_gTrue_rot0_/*[0-9].ds")
+    spectrum_paths_rot1 = glob.glob(path + "/data/isic12_95_gTrue_rot1_/*[0-9].ds")
+    input_path = path + "/source_images/isic12_95.ds"
     
     # All input data
     inputs = ds.load(input_path).raw
@@ -37,9 +37,11 @@ def get_all_data(pad=False, size=95):
     rot = 1
     input_rot1 = np.rot90(inputs, -1+rot, axes=(1, 2))
     
+    pad_value = 110
+    
     x_total = np.concatenate((input_rot0, input_rot1), axis=0)
     if pad:
-        x_total = add_padding_to_images(x_total, 138, 100)
+        x_total = add_padding_to_images(x_total, size, pad_value)
         # import matplotlib.pyplot as plt
         # plt.imshow(x_total[0])
         # plt.show()
