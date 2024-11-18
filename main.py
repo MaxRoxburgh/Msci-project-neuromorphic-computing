@@ -130,7 +130,7 @@ if __name__ == "__main__":
         '-m', '--model-number', dest='model_num', required=True, type=int,
         help='Model number for identification')
     parser.add_argument(
-        '-e', '--epochs', dest='ep', required=False, type=int,
+        '-ep', '--epochs', dest='ep', required=False, type=int,
         help='Number of epochs for training')
     args = parser.parse_args()
 
@@ -154,7 +154,7 @@ else:
     from models import unet_model_6
     model = unet_model_6  
 
-if not ep:
+if not args.ep:
     print("got to here")
     main(model, model_num=f"{args.model_num}", pad=True)    
 else:
