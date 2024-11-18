@@ -1,5 +1,6 @@
 from keras.layers import *
-from tools import enocoder_sub_block
+import keras.backend as K 
+from tools import enocoder_sub_block, encoder_mid_block, crop_and_merge
 
 def unet_model_1(IMG_SHAPE, RESULT_SHAPE):
     """
@@ -63,22 +64,7 @@ def unet_model_1(IMG_SHAPE, RESULT_SHAPE):
     try:
         merge1 = concatenate([dec0, enc5])
     except ValueError:  # crop tensor if shapes do not match
-        shape_de = K.int_shape(dec0)[1]
-        shape_en = K.int_shape(enc5)[1]
-        diff = shape_de - shape_en
-
-        if diff > 0:
-            diff_bottom = int(round(diff / 2))
-            diff_top = int(diff - diff_bottom)
-            dec0 = Cropping2D(cropping=((diff_top, diff_bottom), (diff_top, diff_bottom)))(dec0)
-
-        elif diff < 0:
-            diff = -int(1 * diff)
-            diff_bottom = int(round(diff / 2))
-            diff_top = int(diff - diff_bottom)
-            enc5 = Cropping2D(cropping=((diff_top, diff_bottom), (diff_top, diff_bottom)))(enc5)
-
-        merge1 = concatenate([dec0, enc5])
+        merge1 = crop_and_merge(dec0, enc5)
 
     dec1 = Conv2D(k2, (f[4], f[4]), activation=activation, kernel_initializer=ker_init)(merge1)
     dec2 = Conv2D(k2, (f[5], f[5]), activation=activation, kernel_initializer=ker_init, padding='same')(dec1)
@@ -86,22 +72,8 @@ def unet_model_1(IMG_SHAPE, RESULT_SHAPE):
 
     try:
         merge2 = concatenate([dec3, enc4])
-    except:  # crop tensor if shapes do not match
-        shape_de = K.int_shape(dec3)[1]
-        shape_en = K.int_shape(enc4)[1]
-        diff = shape_de - shape_en
-
-        if diff > 0:
-            diff_bottom = int(round(diff / 2))
-            diff_top = int(diff - diff_bottom)
-            dec3 = Cropping2D(cropping=((diff_top, diff_bottom), (diff_top, diff_bottom)))(dec3)
-        elif diff < 0:
-            diff = -int(1 * diff)
-            diff_bottom = int(round(diff / 2))
-            diff_top = int(diff - diff_bottom)
-            enc4 = Cropping2D(cropping=((diff_top, diff_bottom), (diff_top, diff_bottom)))(enc4)
-
-        merge2 = concatenate([dec3, enc4])
+    except ValueError:  # crop tensor if shapes do not match
+        merge2 = crop_and_merge(dec3, enc4)
 
 
 
@@ -125,52 +97,58 @@ def unet_model_2(IMG_SHAPE, RESULT_SHAPE):
     keeping the same activation, upscaling, dropouts, initialisation and pool-typeing
     greater considerations to new dimensions
     """
-    config = {'activation': 'relu', 'conca': 'twice', 'decov': 'Conv2DTranspose', 'drop': 0.0655936065918576,
-                'drop_mid': 0.21194937479704087, 'f1': 0, 'f2': 3, 'f3': 3, 'k1': 10, 'k2': 25, 'k3': 30,
-                'ker_init': 'glorot_normal', 'pool_type': 'average'}
         
     input_net = Input(IMG_SHAPE) # make inputs 138,138
-    # print("input_net shape:", input_net.shape)
     
     # set parameters
-    activation = 'relu'
     ker_init = 'glorot_normal'
     drop = 0.0655936065918576
-    pool_type = 'average'
     drop_mid = 0.21194937479704087
-    decov = 'Conv2DTranspose'
+
+    # ENCODER
+    # d = 138,138,1 -> 134,134,40 -> 132,132,80 -> 44,44,80
+    enc3 = encoder_sub_block(input_net, NumFilter1=40, NumFilter2=80, KernelSize1=(5,5), 
+                      KernelSize2=(3,3), DropoutRate=drop, DonwsampleSize=(3,3), ker_init=ker_init)
+
+    # -> 40,40,120 -> 36,36,120 -> 12,12,120
+    enc4, enc5, enc6 = enocoder_sub_block(enc3, 120, 120, (5,5),(5,5), drop, (3,3), ker_init, all_encoders=True)
 
 
-    # print("Encoder Shape")
-
-    # picked 40 as there were ~40 features that the netSALT simulation found 
-    enc1 = Conv2D(40, (5, 5), activation=activation, kernel_initializer=ker_init)(input_net) # d = 134,134,40
-    # print("\n\nenc1 shape:", enc1.shape)
-    d1 = Dropout(drop)(enc1)
-    enc2 = Conv2D(80, (3, 3), activation=activation, kernel_initializer=ker_init)(d1) # d = 132,132,80
-    # print("enc2 shape:", enc2.shape)
-    enc3 = AveragePooling2D((3, 3))(enc2) # d = 44,44,80   
-
-    #################################################################
-    # above block encoded into a single function
-    # enc3 = encoder_sub_block(input_net, NumFilter1=40, NumFilter2=80, KernelSize1=(5,5), 
-    #                   KernelSize2=(3,3), DropoutRate=drop, DonwsampleSize=(3,3), ker_init=ker_init)
-    #################################################################
-
-    enc6 = enocoder_sub_block(enc3, 120, 120, (5,5),(5,5), drop, (3,3), ker_init)
-    # d = 40,40,120 -> d = 36,36,120 -> d = 12,12,120
+    # -> 12,12,150 -> 12,12,150
+    enc8 = encoder_mid_block(enc6, NumFilter1=150, NumFilter2=150, DropoutMid=drop_mid, ker_init=ker_init)
 
 
 
-    # enc7 = Conv2D(k3, (1, 1), activation=activation, kernel_initializer=ker_init)(enc6)
-    # # print("enc7 shape:", enc7.shape)
-    # d_mid = Dropout(drop_mid)(enc7)
-    # # print("dmid shape:", d_mid.shape)
-    # enc8 = Conv2D(k3, (1, 1), activation=activation, kernel_initializer=ker_init)(d_mid)
-    # # print("enc8 shape:", enc8.shape)
+    ## DECODER
+    # -> 36,36,120
+    dec0 = Conv2DTranspose(120, (3, 3), strides=(3, 3))(enc8)
+    # -> 36,36,240
+    merge1 = concatenate([dec0, enc5])
+    # -> 32,32,120
+    dec1 = Conv2D(120, (5, 5), activation='relu', kernel_initializer=ker_init)(merge1)
+    # -> 28,28,110
+    dec2 = Conv2D(110, (5, 5), activation='relu', kernel_initializer=ker_init)(dec1)
+    # -> 24,24,100
+    dec3 = Conv2D(100, (5, 5), activation='relu', kernel_initializer=ker_init)(dec2)
+    # -> 22,22,90
+    dec4 = Conv2D(90, (3,3), activation='relu', kernel_initializer=ker_init)(dec3)
+    # -> 44,44,80
+    dec5 = Conv2DTranspose(80, (2, 2), strides=(2, 2))(dec2)(dec4)
+    # -> 44,44,160
+    merge2 = concatenate([dec5, enc3])
+    # -> 42,42,40
+    dec6 = Conv2D(40, (3, 3), activation='relu', kernel_initializer=ker_init)(merge2)
+    # -> 40,40,3
+    dec7 = conv2D(4, (3, 3), activation='relu', kernel_initializer=ker_init)(dec6)
+    # -> 4800
+    dec8 = Flatten()(dec7)
+    # 4096 (=64^2)
+    dec9 = Dense(np.prod(RESULT_SHAPE))(dec8)
 
+    output_net = Reshape(RESULT_SHAPE)(dec8)
 
-    pass
+    return input_net, output_net
+
 
 def unet_model_3(IMG_SHAPE, RESULT_SHAPE):
     pass
