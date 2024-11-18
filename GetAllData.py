@@ -64,5 +64,5 @@ def get_all_data(pad=False, size=95):
     y_total = y_total[:,10:74,65:193].reshape(len(x_total),64,64,2).mean(axis=-1).reshape(len(x_total),64,64,1)
     x_total = x_total.reshape(len(x_total),size,size,1)
     
-        
+    print("total no. items:", y_total.shape[0])
     return train_test_split(x_total, y_total, test_size=0.1, random_state=42)
