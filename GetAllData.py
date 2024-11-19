@@ -39,7 +39,7 @@ def get_all_data(pad=False, size=95):
     rot = 1
     input_rot1 = np.rot90(inputs, -1+rot, axes=(1, 2))
     
-    pad_value = 110
+    pad_value = 157
     
     x_total = np.concatenate((input_rot0, input_rot1), axis=0)
     if pad:
@@ -49,6 +49,15 @@ def get_all_data(pad=False, size=95):
         # plt.show()
         # plt.imshow(x_total[1])
         # plt.show()
+        # plt.imshow(x_total[5000])
+        # plt.show()
+        # plt.imshow(x_total[3])
+        # plt.show()
+        # plt.imshow(x_total[4])
+        # plt.show()
+        # plt.imshow(x_total[5])
+        # plt.show()
+        # return
         
     # All output data
     y_total = ds.load(spectrum_paths_rot0[0]).raw
@@ -66,3 +75,6 @@ def get_all_data(pad=False, size=95):
     
     print("total no. items:", y_total.shape[0])
     return train_test_split(x_total, y_total, test_size=0.1, random_state=42)
+
+# get_all_data(True, 138)
+# print()
