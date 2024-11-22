@@ -27,9 +27,9 @@ def get_all_data(pad=False, size=95, home=False):
         path = os.getcwd().replace("\\", "/") + "/twin_data"
     
     spectrum_paths_rot0 = glob.glob(path + "/data/isic12_95_gTrue_rot0_/*[0-9].ds")
-    spectrum_paths_rot0 = [i.replace("\\", "/") for i in spectrum_paths_rot0]
+    spectrum_paths_rot0 = sorted([i.replace("\\", "/") for i in spectrum_paths_rot0])
     spectrum_paths_rot1 = glob.glob(path + "/data/isic12_95_gTrue_rot1_/*[0-9].ds")
-    spectrum_paths_rot1 = [i.replace("\\", "/") for i in spectrum_paths_rot1]
+    spectrum_paths_rot1 = sorted([i.replace("\\", "/") for i in spectrum_paths_rot1])
     input_path = path + "/source_images/isic12_95.ds"
     
     # All input data
