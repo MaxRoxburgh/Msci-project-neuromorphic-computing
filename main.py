@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import GetAllData as GAD
 
 import plot as pl
+from tools import TrendBasedEarlyStopping
 
 # check if code running on GPU
 from tensorflow.python.client import device_lib
@@ -30,10 +31,11 @@ print(tf.config.list_physical_devices('GPU'))
 print('\nRunning on cuda:', tf.test.is_built_with_cuda())
 
 
-def main(model, model_num, pad=False, ep=70):#args):
+def main(model, model_num, pad=False, ep=200):#args):
     
     ###########################################################################
     # getting data
+    
     print('\nLoading Data...')
     x_train, x_val, y_train, y_val = GAD.get_all_data()
     x_train, x_val, y_train, y_val = tf.stack(x_train), tf.stack(x_val), tf.stack(y_train), tf.stack(y_val)
@@ -44,23 +46,16 @@ def main(model, model_num, pad=False, ep=70):#args):
     print('y_train shape:', y_train.shape)
     print(x_train.shape[0], 'train samples')
     print(x_val.shape[0], 'validation samples')
-    
-    # plt.imshow(x_train[0])
-    # plt.show()
-    # plt.imshow(y_train[0])
-    # plt.show()
-    
-    # input("\nTaking a break for a while...\n")
+
     
     ###########################################################################
     # model building
+    
     print('\nModel building ...')
     
     IMG_SHAPE = x_train.shape[1:]
     RESULT_SHAPE = y_train.shape[1:]
-    # print(IMG_SHAPE,RESULT_SHAPE)
-    # print("prod r_shape", np.prod(RESULT_SHAPE))
-    # input("wait")
+
     
     encoder, decoder = model(IMG_SHAPE, RESULT_SHAPE)
     inp = encoder
@@ -81,7 +76,7 @@ def main(model, model_num, pad=False, ep=70):#args):
         return K.mean(correct)
     
     autoencoder = Model(inp, reconstruction)
-    loss = 'mae'
+    loss = 'mse'
     autoencoder.compile(optimizer='adamax', loss=loss, metrics=[accuracy])
     print(autoencoder.summary())
     
@@ -89,33 +84,53 @@ def main(model, model_num, pad=False, ep=70):#args):
     ###########################################################################
     # model training
     
+    early_stopping = TrendBasedEarlyStopping(
+        monitor_train='loss',   # Metric to monitor for training
+        monitor_val='val_loss', # Metric to monitor for validation
+        patience=8              # Number of epochs to evaluate the trend
+    )
+        
     print('\nTraining ...\n')
     # input("press something to continue")
     start_time = time.time()
     
-    # train
-    batch_size = 32
+    # train branch 1: large batch
+    batch_size = 128
     print("batch size:", batch_size)
-    # steps_per_epoch = number of test data/ batch_size
-    # steps_per_epoch = 200
     print("epochs:", ep)
-    history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=0, validation_data=[x_val, y_val],
-                              batch_size=batch_size)#, steps_per_epoch=steps_per_epoch)
-
-    # plot and save loss history
-    dir_folder = os.getcwd().replace("\\", "/") + f"/history/model_{model_num}"
+    history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=2, validation_data=[x_val, y_val],
+                              batch_size=batch_size, callbacks=[early_stopping])
+    
+    # plot and save loss history branch 1
+    dir_folder = os.getcwd().replace("\\", "/") + f"/history_bigdata/model_{model_num}/branch1"
     os.makedirs(dir_folder, exist_ok=True)
     pl.losshistory(history.history, dir_folder, True)#args.plot_show)
     with open(dir_folder + '/losshistory-dict','wb') as file:
         pickle.dump(history.history, file)
-        
+    
+    print("\nLarge batch complete; fine tuning...\n")    
+    
+    batch_size = 8
+    print("batch size:", batch_size)
+    print("epochs:", ep)
+    
+    history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=2, validation_data=[x_val, y_val],
+                              batch_size=batch_size, callbacks=[early_stopping])
+    
+    # plot and save loss history branch 2
+    dir_folder = os.getcwd().replace("\\", "/") + f"/history_bigdata/model_{model_num}/branch2"
+    os.makedirs(dir_folder, exist_ok=True)
+    pl.losshistory(history.history, dir_folder, True)#args.plot_show)
+    with open(dir_folder + '/losshistory-dict','wb') as file:
+        pickle.dump(history.history, file)
+    
     end_time = time.time()-start_time
     print('\nTraining took', end_time, 's')
     print('which is', end_time/3600, 'hrs')
     
     ###########################################################################
     # save model
-    
+    dir_folder = os.getcwd().replace("\\", "/") + f"/history_bigdata/model_{model_num}"
     autoencoder.save(dir_folder + f"/model_updated_size{model_num}.keras")
 
     print("\nSaved model to disk")

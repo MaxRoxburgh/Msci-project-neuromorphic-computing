@@ -1,6 +1,7 @@
 from keras.layers import Conv2D, Dropout, AveragePooling2D, concatenate, Cropping2D
 import keras.backend as K 
 import numpy as np
+from tensorflow.keras.callbacks import Callback
 
 def encoder_sub_block(input, NumFilter1, NumFilter2, KernelSize1, KernelSize2, DropoutRate, DonwsampleSize, ker_init='random_normal', activation='relu', debug=False, all_encoders=False):
     """
@@ -223,5 +224,43 @@ def resample_image_sp(images, new_size):
     zoom_scale = new_size/images.shape[1]
     from scipy.ndimage import zoom
     return np.array([zoom(im, zoom_scale, order=5) for im in images])
+
+
+class TrendBasedEarlyStopping(Callback):
+    def __init__(self, monitor_train='loss', monitor_val='val_loss', patience=5):
+        super(TrendBasedEarlyStopping, self).__init__()
+        self.monitor_train = monitor_train
+        self.monitor_val = monitor_val
+        self.patience = patience
+        self.diff_history = []  # To store the differences for the last `patience` epochs
+        self.best_weights = None  # To store the best weights
+
+    def on_epoch_end(self, epoch, logs=None):
+        train_loss = logs.get(self.monitor_train)
+        val_loss = logs.get(self.monitor_val)
+        if train_loss is None or val_loss is None:
+            return  # Skip if the metrics are not available
+
+        # Calculate the difference between val_loss and train_loss
+        diff = val_loss - train_loss
+        self.diff_history.append(diff)
+
+        # Keep only the last `patience` differences
+        if len(self.diff_history) > self.patience:
+            self.diff_history.pop(0)
+
+        # Check if the differences are strictly increasing
+        if len(self.diff_history) == self.patience and all(
+            self.diff_history[i] < self.diff_history[i + 1] for i in range(len(self.diff_history) - 1)
+        ):
+            print(f"Epoch {epoch + 1}: Overfitting trend detected (increasing val_loss - train_loss).")
+            print(f"Stopping training and reverting to the best weights from earlier epochs.")
+            self.model.stop_training = True
+            if self.best_weights:
+                self.model.set_weights(self.best_weights)
+        
+        # Save the best weights based on val_loss
+        if len(self.diff_history) == 1 or val_loss < min(self.diff_history):
+            self.best_weights = self.model.get_weights()
 
     
