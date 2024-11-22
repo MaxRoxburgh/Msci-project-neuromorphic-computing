@@ -2,6 +2,7 @@ from keras.layers import Input, Conv2D, Dropout, AveragePooling2D, Conv2DTranspo
 from tools import encoder_sub_block, encoder_mid_block, crop_and_merge
 import keras.backend as K 
 import numpy as np
+#
 
 def unet_model_1(IMG_SHAPE, RESULT_SHAPE):
     """

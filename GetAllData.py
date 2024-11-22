@@ -12,7 +12,7 @@ import glob
 from sklearn.model_selection import train_test_split
 from tools import add_padding_to_images
 
-def get_all_data(pad=False, size=95):
+def get_all_data(pad=False, size=95, home=False):
     """
     Returns
     -------
@@ -21,8 +21,10 @@ def get_all_data(pad=False, size=95):
     """
 
     # Take relevant paths
-    path = os.getcwd().replace("\\", "/") + "/twin_data"
-    # path = "C:/Users/Maxwell/Imperial College London/complex nanophotonics - PH - 20241101_sanity checks"
+    if home:
+        path = "C:/Users/Maxwell/Imperial College London/complex nanophotonics - PH - 20241101_sanity checks"
+    else:
+        path = os.getcwd().replace("\\", "/") + "/twin_data"
     
     spectrum_paths_rot0 = glob.glob(path + "/data/isic12_95_gTrue_rot0_/*[0-9].ds")
     spectrum_paths_rot0 = [i.replace("\\", "/") for i in spectrum_paths_rot0]

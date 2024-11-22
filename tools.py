@@ -132,11 +132,17 @@ def crop_and_merge(dec, enc, debug=False):
 def add_padding_to_images(input_array, new_size, padding_value=0):
     """
     Adds padding to every picture in the input array.
-    
-    Parameters:
-        input_array (numpy.ndarray): The input array of shape (n_images, height, width).
-        new_size (int): The desired new width and height of the padded images.
-        padding_value (int/float): The value to use for padding. Default is 0.
+    ----------
+    Parameters
+    ----------
+        input_array; ndarray 
+            The input array of shape (n_images, height, width).
+        
+        new_size: int 
+            The desired new width and height of the padded images.
+        
+        padding_value: int or float
+            The value to use for padding. Default is 0.
         
     Returns:
         numpy.ndarray: The padded array of shape (n_images, new_size, new_size).
@@ -151,12 +157,12 @@ def add_padding_to_images(input_array, new_size, padding_value=0):
     padding_width = (new_size - original_width) // 2
     
     # Create padded array
-    # padded_array = np.full((n_images, new_size, new_size), padding_value, dtype=input_array.dtype)
-    padded_array = np.full((n_images, new_size, new_size), 1, dtype=input_array.dtype)
+    padded_array = np.full((n_images, new_size, new_size), padding_value, dtype=input_array.dtype)
+    # padded_array = np.full((n_images, new_size, new_size), 1, dtype=input_array.dtype)
 
-    from statistics import mode
-    modes = [mode(i.flatten()) for i in input_array]
-    padded_array = np.array([i*j for i, j in zip(modes, padded_array)])
+    # from statistics import mode
+    # modes = [mode(i.flatten()) for i in input_array]
+    # padded_array = np.array([i*j for i, j in zip(modes, padded_array)])
 
     # Copy original images into the center of the new array
     for i in range(n_images):
@@ -165,4 +171,56 @@ def add_padding_to_images(input_array, new_size, padding_value=0):
                      padding_width:padding_width + original_width] = input_array[i]
     
     return padded_array
+
+def resample_image_by_scale(image: np.ndarray, new_width: int) -> np.ndarray:
+    """
+    Takes a square image and resamples it to another square image of different 
+    dimensions
+    Principle behined it is finds the lowest common multiple of the new and old 
+    dimensions, then scales it up using np.repeat to be the size of the lcm, 
+    then takes an average over an intiger number of squares to downsample to 
+    new dimensions
+    ----------
+    Parameters
+    ----------
+    image : np.ndarray
+        Square (n,n) array that will be resampled
+    new_width : int
+        width of new resampled image
+
+    Returns
+    -------
+    new_image : np.ndarray
+        new resampled image dimesnsions (new_width, new_width)
+        
+    None if not a square
+    """
+    
+    if image.shape[0] != image.shape[1]:
+        print("Not a square image")
+        return None
+        
+    n = image.shape[0]
+    m = new_width
+    
+    from math import lcm
+    
+    lcm_mn = int(lcm(n,m))
+    
+    multiply_scale = int(lcm_mn/n)
+    reduction_scale = int(lcm_mn/m)
+    
+    # scales it up
+    new_image = np.repeat(image, multiply_scale, axis=1)
+    new_image = np.repeat(new_image, multiply_scale, axis=0)
+    
+    # scales it down using the average
+    new_image = np.array([np.average(new_image[i:i+reduction_scale,j:j+reduction_scale].flatten()) for i in range(0, lcm_mn, reduction_scale) for j in range(0, lcm_mn, reduction_scale)]).reshape((m,m))
+    
+    return new_image
+
+def resample_image_sp(images, new_size):
+    zoom_scale = new_size/images.shape[1]
+    from scipy.ndimage import zoom
+    return np.array([zoom(im, zoom_scale, order=5) for im in images])
     
