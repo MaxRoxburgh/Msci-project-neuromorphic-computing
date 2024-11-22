@@ -64,6 +64,7 @@ def get_all_data(pad=False, size=95, home=False):
     # All output data
     y_total = ds.load(spectrum_paths_rot0[0]).raw
     
+    
     for i in spectrum_paths_rot0[1:]:
         y_temp = ds.load(i).raw
         y_total = np.concatenate((y_total, y_temp))
