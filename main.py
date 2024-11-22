@@ -35,7 +35,7 @@ def main(model, model_num, pad=False, ep=70):#args):
     ###########################################################################
     # getting data
     print('\nLoading Data...')
-    x_train, x_val, y_train, y_val = GAD.get_all_data(pad=pad, size=138)
+    x_train, x_val, y_train, y_val = GAD.get_all_data()
     x_train, x_val, y_train, y_val = tf.stack(x_train), tf.stack(x_val), tf.stack(y_train), tf.stack(y_val)
     
     print(x_train.shape, x_val.shape, y_train.shape, y_val.shape)

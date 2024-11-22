@@ -223,4 +223,5 @@ def resample_image_sp(images, new_size):
     zoom_scale = new_size/images.shape[1]
     from scipy.ndimage import zoom
     return np.array([zoom(im, zoom_scale, order=5) for im in images])
+
     
