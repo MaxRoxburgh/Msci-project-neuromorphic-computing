@@ -30,7 +30,7 @@ print(tf.config.list_physical_devices('GPU'))
 print('\nRunning on cuda:', tf.test.is_built_with_cuda())
 
 
-def main(model, model_num, pad=False, ep=150):#args):
+def main(model, model_num, pad=False, ep=70):#args):
     
     ###########################################################################
     # getting data
@@ -94,12 +94,12 @@ def main(model, model_num, pad=False, ep=150):#args):
     start_time = time.time()
     
     # train
-    batch_size = 64
+    batch_size = 32
     print("batch size:", batch_size)
     # steps_per_epoch = number of test data/ batch_size
     # steps_per_epoch = 200
     print("epochs:", ep)
-    history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=2, validation_data=[x_val, y_val],
+    history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=0, validation_data=[x_val, y_val],
                               batch_size=batch_size)#, steps_per_epoch=steps_per_epoch)
 
     # plot and save loss history
@@ -123,44 +123,43 @@ def main(model, model_num, pad=False, ep=150):#args):
     print('-'*20)
     # print("Arguments:\n", args)
 
-from models import unet_model_3
-main(unet_model_3, model_num="3_v2", pad=True)
-# if __name__ == "__main__":
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument(
-#         '-m', '--model-number', dest='model_num', required=True, type=int,
-#         help='Model number for identification')
-#     parser.add_argument(
-#         '-ep', '--epochs', dest='ep', required=False, type=int,
-#         help='Number of epochs for training')
-#     args = parser.parse_args()
 
-# if args.model_num == 1:
-#     from models import unet_model_1
-#     model = unet_model_1
-# elif args.model_num == 2:
-#     from models import unet_model_2
-#     model = unet_model_2
-# elif args.model_num == 3:
-#     from models import unet_model_3
-#     model = unet_model_3
-# elif args.model_num == 4:
-#     from models import unet_model_4
-#     model = unet_model_4
-# elif args.model_num == 5:
-#     from models import unet_model_5
-#     model = unet_model_5    
-# elif args.model_num == 7:
-#     from models import unet_model_7
-#     model = unet_model_7
-# else:
-#     args.model_num = 6
-#     from models import unet_model_6
-#     model = unet_model_6  
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-m', '--model-number', dest='model_num', required=True, type=int,
+        help='Model number for identification')
+    parser.add_argument(
+        '-ep', '--epochs', dest='ep', required=False, type=int,
+        help='Number of epochs for training')
+    args = parser.parse_args()
 
-# if not args.ep:
-#     main(model, model_num=f"{args.model_num}", pad=True)    
-# else:
-#     main(model, model_num=f"{args.model_num}", pad=True, ep=args.ep)    
+if args.model_num == 1:
+    from models import unet_model_1
+    model = unet_model_1
+elif args.model_num == 2:
+    from models import unet_model_2
+    model = unet_model_2
+elif args.model_num == 3:
+    from models import unet_model_3
+    model = unet_model_3
+elif args.model_num == 4:
+    from models import unet_model_4
+    model = unet_model_4
+elif args.model_num == 5:
+    from models import unet_model_5
+    model = unet_model_5    
+elif args.model_num == 7:
+    from models import unet_model_7
+    model = unet_model_7
+else:
+    args.model_num = 6
+    from models import unet_model_6
+    model = unet_model_6  
+
+if not args.ep:
+    main(model, model_num=f"{args.model_num}", pad=True)    
+else:
+    main(model, model_num=f"{args.model_num}", pad=True, ep=args.ep)    
     
     

@@ -19,9 +19,18 @@ spectrum_paths_rot1 = sorted([i.replace("\\", "/") for i in spectrum_paths_rot1]
 input_path = path + "/source_images/isic12_95.ds"
 
 print("spectrum rot0")
-for path in spectrum_paths_rot0:
-    print(path)
+#for path in spectrum_paths_rot0:
+    #print(path)
     
 print("\nspectrum rot1")
-for path in spectrum_paths_rot1:
+#for path in spectrum_paths_rot1:
+    #print(path)
+
+
+spectrum_paths_cifar = glob.glob(path + "/data/cifar10_gray_gTrue_rot0_/*[0-9].ds")
+spectrum_paths_cifar = sorted([i.replace("\\", "/") for i in spectrum_paths_cifar])
+print("\ncifar data:")
+for path in spectrum_paths_cifar:
     print(path)
+
+print("\n\n")
