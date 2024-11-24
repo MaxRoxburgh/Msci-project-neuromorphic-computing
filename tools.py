@@ -256,6 +256,16 @@ def resample_image_sp(images, new_size):
     from scipy.ndimage import zoom
     return np.array([zoom(im, zoom_scale, order=5) for im in images])
 
+def spectrum_retrival(paths):
+    import datasets as ds
+    
+    total = ds.load(paths[0]).raw
+    for i in paths[1:]:
+        temp = ds.load(i).raw
+        total = np.concatenate((total, temp), axis=0)
+        
+    return total
+
 
 class TrendBasedEarlyStopping(Callback):
     def __init__(self, monitor_train='loss', monitor_val='val_loss', patience=5):
