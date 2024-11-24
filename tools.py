@@ -220,6 +220,37 @@ def resample_image_by_scale(image: np.ndarray, new_width: int) -> np.ndarray:
     
     return new_image
 
+def resample_imporved(images: np.ndarray, new_width: int) -> np.ndarray:
+    if images.shape[1] != images.shape[2]:
+        print("Not a square image")
+        return None
+    
+    total = len(images)
+    n = images.shape[1]
+    m = new_width
+
+    if m == n:
+        return images
+    
+    from math import lcm
+    
+    lcm_mn = int(lcm(n,m))
+    
+    multiply_scale = int(lcm_mn/n)
+    reduction_scale = int(lcm_mn/m)
+    
+    new_images = np.repeat(np.repeat(images, multiply_scale, axis=1), multiply_scale, axis=2)
+    if reduction_scale == 1:
+        return new_images
+
+    
+    new_images = new_images.reshape(total, m*reduction_scale, m, reduction_scale).mean(axis=-1)
+    rot_image = np.rot90(new_images, 1, (1,2))
+    new_images = rot_image.reshape(total, m, m, reduction_scale).mean(axis=-1).reshape(total,m,m)
+    un_rot_image = np.rot90(new_images, -1, (1,2))
+    
+    return un_rot_image
+
 def resample_image_sp(images, new_size):
     zoom_scale = new_size/images.shape[1]
     from scipy.ndimage import zoom
@@ -263,4 +294,53 @@ class TrendBasedEarlyStopping(Callback):
         if len(self.diff_history) == 1 or val_loss < min(self.diff_history):
             self.best_weights = self.model.get_weights()
 
-    
+class DivergenceEarlyStopping(Callback):
+    def __init__(self, monitor_train='loss', monitor_val='val_loss', patience=7):
+        super(DivergenceEarlyStopping, self).__init__()
+        self.patience = patience
+        self.monitor_train = monitor_train
+        self.monitor_val = monitor_val
+        self.best_weights = None
+        self.divergence_history = []
+        self.best_val_loss = np.inf
+        self.initial_wait = 30
+
+    def on_epoch_end(self, epoch, logs=None):
+        train_loss = logs.get(self.monitor_train)
+        val_loss = logs.get(self.monitor_val)
+        if train_loss is None or val_loss is None:
+            return  # Skip if the metrics are not available
+
+        diff = abs(train_loss - val_loss)
+
+        if epoch < self.initial_wait:
+            self.best_weights = self.model.get_weights()
+            return
+        
+        self.divergence_history.append(diff)
+
+        if val_loss < self.best_val_loss and all(diff < i for i in self.divergence_history):
+            self.best_val_loss = val_loss
+            self.best_weights = self.model.get_weights()
+            self.divergence_history = []
+            return
+
+        if len(self.divergence_history) == self.patience:
+            print("\nTraining halted early:")
+            print("\tEither train and validation values are diverging or validation loss is not decreasing.\n")
+            self.stopped_epoch = epoch
+            self.model.stop_training = True
+            print("Restoring model weights from the end of the best epoch.")
+            self.model.set_weights(self.best_weights)
+
+    def on_train_end(self, logs=None):
+        if self.stopped_epoch > 0:
+            print("Epoch %05d: early stopping" % (self.stopped_epoch + 1))
+
+
+        
+
+
+        
+
+
