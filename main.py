@@ -83,23 +83,18 @@ def main(model, model_num, pad=False, ep=200):#args):
     
     ###########################################################################
     # model training
-    
-    early_stopping = TrendBasedEarlyStopping(
-        monitor_train='loss',   # Metric to monitor for training
-        monitor_val='val_loss', # Metric to monitor for validation
-        patience=8              # Number of epochs to evaluate the trend
-    )
-        
+
     print('\nTraining ...\n')
     # input("press something to continue")
     start_time = time.time()
     
     # train branch 1: large batch
     batch_size = 128
+    ep = 80
     print("batch size:", batch_size)
     print("epochs:", ep)
     history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=2, validation_data=[x_val, y_val],
-                              batch_size=batch_size, callbacks=[early_stopping])
+                              batch_size=batch_size)
     
     # plot and save loss history branch 1
     dir_folder = os.getcwd().replace("\\", "/") + f"/history_bigdata/model_{model_num}/branch1"
@@ -108,21 +103,6 @@ def main(model, model_num, pad=False, ep=200):#args):
     with open(dir_folder + '/losshistory-dict','wb') as file:
         pickle.dump(history.history, file)
     
-    print("\nLarge batch complete; fine tuning...\n")    
-    
-    batch_size = 8
-    print("batch size:", batch_size)
-    print("epochs:", ep)
-    
-    history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=2, validation_data=[x_val, y_val],
-                              batch_size=batch_size, callbacks=[early_stopping])
-    
-    # plot and save loss history branch 2
-    dir_folder = os.getcwd().replace("\\", "/") + f"/history_bigdata/model_{model_num}/branch2"
-    os.makedirs(dir_folder, exist_ok=True)
-    pl.losshistory(history.history, dir_folder, True)#args.plot_show)
-    with open(dir_folder + '/losshistory-dict','wb') as file:
-        pickle.dump(history.history, file)
     
     end_time = time.time()-start_time
     print('\nTraining took', end_time, 's')
@@ -130,7 +110,7 @@ def main(model, model_num, pad=False, ep=200):#args):
     
     ###########################################################################
     # save model
-    dir_folder = os.getcwd().replace("\\", "/") + f"/history_bigdata/model_{model_num}"
+    dir_folder = os.getcwd().replace("\\", "/") + f"/history_model_comparison/model_{model_num}"
     autoencoder.save(dir_folder + f"/model_updated_size{model_num}.keras")
 
     print("\nSaved model to disk")

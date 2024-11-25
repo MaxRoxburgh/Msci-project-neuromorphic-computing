@@ -263,9 +263,15 @@ def spectrum_retrival(paths):
     for i in paths[1:]:
         temp = ds.load(i).raw
         total = np.concatenate((total, temp), axis=0)
+    n = len(total)
+    total = total[:,10:74,65:193].reshape(n,64,64,2).mean(axis=-1).reshape(n,64,64)
         
     return total
 
+def multiplied(data, mult):
+    n = len(data)
+    mult_matrix = np.full(data.shape, mult)
+    return data*mult_matrix
 
 class TrendBasedEarlyStopping(Callback):
     def __init__(self, monitor_train='loss', monitor_val='val_loss', patience=5):
