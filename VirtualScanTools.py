@@ -33,16 +33,18 @@ def take_scan_virtual(data, model_path, mult, power, padding_value=0, invert=Fal
 
     """
     
-    from tools import add_padding_to_images, resample_imporved
+    from tools import add_padding_to_images, resample_imporved, multiplied
     from tensorflow.keras.models import load_model
     
     scan_pic_width = data.shape[1]*mult
     new_size = int(scan_pic_width/4)
     
     if invert:
-        rescaled_data = (255 - resample_imporved(data, new_size))*power
+        rescaled_data = (255 - resample_imporved(data, new_size))
     else:
-        rescaled_data = resample_imporved(data, new_size)*power
+        rescaled_data = resample_imporved(data, new_size)
+
+    rescaled_data = multiplied(rescaled_data, power)
         
     if new_size != 133:
         rescaled_data = add_padding_to_images(rescaled_data, 133, padding_value*power)
