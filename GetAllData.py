@@ -220,3 +220,39 @@ def get_all_data_and_mnist(home=False):
     
     print("total no. items:", y_total.shape[0])
     return train_test_split(x_total, y_total, test_size=0.1, random_state=42)
+
+def get_everything(home=False):
+    
+    if home:
+        path = "C:/Users/Maxwell/Imperial College London/complex nanophotonics - PH - 20241101_sanity checks"
+    else:
+        path = os.getcwd().replace("\\", "/") + "/twin_data"
+    
+    import GADtools as get_the_data_for
+    x, y = get_the_data_for.mnist(path)
+    print("mnist loaded")
+
+    x_temp, y_temp = get_the_data_for.cifar10_gray(path)
+    x = np.concatenate((x, x_temp))
+    y = np.concatenate((y, y_temp))
+    print("cifar10 grayscale loaded")
+
+    x_temp, y_temp = get_the_data_for.isic12_95(path)
+    x = np.concatenate((x, x_temp))
+    y = np.concatenate((y, y_temp))
+    print("isic12_95 loaded")
+
+    x_temp, y_temp = get_the_data_for.cifar10_colour(path)
+    x = np.concatenate((x, x_temp))
+    y = np.concatenate((y, y_temp))
+    print("cifar10 coloured loaded")
+
+    x_temp, y_temp = get_the_data_for.breakhist(path)
+    x = np.concatenate((x, x_temp))
+    y = np.concatenate((y, y_temp))
+    print("breakhist loaded")
+
+    x = add_padding_to_images(x, 138).reshape(len(x), 138, 138, 1)
+    y = y.reshape(len(y), 64, 64, 1)
+    print("\nAll Data Loaded\n")
+    return x, y

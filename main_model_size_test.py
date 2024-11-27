@@ -5,6 +5,10 @@ import argparse
 import pickle
 
 import keras.backend as K 
+try:
+    from keras.optimizers import Adamax
+except:
+    print("module doesn't exist")
 import tensorflow as tf
 from keras.models import Model
 import matplotlib.pyplot as plt
@@ -66,9 +70,18 @@ def main(model, model_num, pad=False, ep=80):
 
         return K.mean(correct)
     
-    autoencoder = Model(inp, reconstruction)
-    loss = 'mse'
-    autoencoder.compile(optimizer='adamax', loss=loss, metrics=[accuracy])
+    try:
+        autoencoder = Model(inp, reconstruction)
+        loss = 'mse'
+        opt = Adamax(learning_rate = 0.00005, epsilon=1e-8)
+        # this lr = 0.00005 is 6x less than previous test
+        autoencoder.compile(optimizer=opt, loss=loss, metrics=[accuracy])
+    except:
+        print("failed to load optimiser")
+        autoencoder = Model(inp, reconstruction)
+        loss = 'mse'
+        autoencoder.compile(optimizer="adamax", loss=loss, metrics=[accuracy])
+
     print(autoencoder.summary())
     
     
@@ -79,8 +92,8 @@ def main(model, model_num, pad=False, ep=80):
     start_time = time.time()
     
     # train branch 1: large batch
-    batch_size = 128
-    ep = 80
+    batch_size = 32
+    ep = 50
     print("batch size:", batch_size)
     print("epochs:", ep)
     history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=0, validation_data=[x_val, y_val],
@@ -93,7 +106,7 @@ def main(model, model_num, pad=False, ep=80):
     ###########################################################################
     # save model
 
-    dir_folder = os.getcwd().replace("\\", "/") + f"/history_model_comparison/model_{model_num}/branch1"
+    dir_folder = os.getcwd().replace("\\", "/") + f"/history_model_comparison/model_{model_num}_smaller_lr"
     os.makedirs(dir_folder, exist_ok=True)
     pl.losshistory(history.history, dir_folder, True)
     with open(dir_folder + '/losshistory-dict','wb') as file:
@@ -106,8 +119,8 @@ def main(model, model_num, pad=False, ep=80):
     print('-'*20)
 
 import models as m
-main(m.unet_model_1, "1")
-main(m.unet_model_2, "2")
+# main(m.unet_model_1, "1")
+# main(m.unet_model_2, "2")
 main(m.unet_model_3, "3")
 main(m.unet_model_4, "4")
 main(m.unet_model_5, "5")

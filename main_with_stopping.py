@@ -13,6 +13,10 @@ import argparse
 import pickle
 
 import keras.backend as K 
+try:
+    from keras.optimizers import Adamax
+except:
+    print("module doesn't exist")
 import tensorflow as tf
 from keras.models import Model
 import matplotlib.pyplot as plt
@@ -75,9 +79,10 @@ def main(model, model_num, pad=False, ep=200):
 
         return K.mean(correct)
     
+    opt = Adamax(learning_rate = 0.00015, epsilon=1e-8)
     autoencoder = Model(inp, reconstruction)
     loss = 'mae'
-    autoencoder.compile(optimizer='adamax', loss=loss, metrics=[accuracy])
+    autoencoder.compile(optimizer=opt, loss=loss, metrics=[accuracy])
     print(autoencoder.summary())
     
     
@@ -91,8 +96,8 @@ def main(model, model_num, pad=False, ep=200):
     start_time = time.time()
     
     # train branch 1: large batch
-    batch_size = 128
-    ep = 25
+    batch_size = 8
+    ep = 8
     print("batch size:", batch_size)
     print("epochs:", ep)
     history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=2, validation_data=[x_val, y_val],
@@ -103,37 +108,37 @@ def main(model, model_num, pad=False, ep=200):
     autoencoder.save(dir_folder + f"/model_updated_size{model_num}_large_batch.keras")
     
     # plot and save loss history branch 1
-    dir_folder = os.getcwd().replace("\\", "/") + f"/history_bigdata/model_{model_num}/branch1"
+    dir_folder = os.getcwd().replace("\\", "/") + f"/history_bigdata/model_{model_num}"
     os.makedirs(dir_folder, exist_ok=True)
     pl.losshistory(history.history, dir_folder, True)
     with open(dir_folder + '/losshistory-dict','wb') as file:
         pickle.dump(history.history, file)
     
-    print("\nLarge batch complete; fine tuning...\n")    
+    # print("\nLarge batch complete; fine tuning...\n")    
     
-    batch_size = 8
-    ep = 50
-    print("batch size:", batch_size)
-    print("epochs:", ep)
+    # batch_size = 8
+    # ep = 50
+    # print("batch size:", batch_size)
+    # print("epochs:", ep)
     
-    history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=2, validation_data=[x_val, y_val],
-                              batch_size=batch_size)#, callbacks=[early_stopping])
+    # history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=2, validation_data=[x_val, y_val],
+    #                           batch_size=batch_size)#, callbacks=[early_stopping])
     
-    # plot and save loss history branch 2
-    dir_folder = os.getcwd().replace("\\", "/") + f"/history_bigdata/model_{model_num}/branch2"
-    os.makedirs(dir_folder, exist_ok=True)
-    pl.losshistory(history.history, dir_folder, True)
-    with open(dir_folder + '/losshistory-dict','wb') as file:
-        pickle.dump(history.history, file)
+    # # plot and save loss history branch 2
+    # dir_folder = os.getcwd().replace("\\", "/") + f"/history_bigdata/model_{model_num}/branch2"
+    # os.makedirs(dir_folder, exist_ok=True)
+    # pl.losshistory(history.history, dir_folder, True)
+    # with open(dir_folder + '/losshistory-dict','wb') as file:
+    #     pickle.dump(history.history, file)
     
     end_time = time.time()-start_time
     print('\nTraining took', end_time, 's')
     print('which is', end_time/3600, 'hrs')
     
     ###########################################################################
-    # save model
-    dir_folder = os.getcwd().replace("\\", "/") + f"/history_bigdata/model_{model_num}"
-    autoencoder.save(dir_folder + f"/model_updated_size{model_num}_small_batch.keras")
+    # # save model
+    # dir_folder = os.getcwd().replace("\\", "/") + f"/history_bigdata/model_{model_num}"
+    # autoencoder.save(dir_folder + f"/model_updated_size{model_num}_small_batch.keras")
 
     print("\nSaved model to disk")
 
@@ -142,7 +147,8 @@ def main(model, model_num, pad=False, ep=200):
 
 
 from models import unet_model_small
-main(unet_model_small, model_num=f"3_efftrain_mae_fixed_data", pad=True)    
+# main(unet_model_small, model_num=f"3_efftrain_mae_fixed_data", pad=True)    
+main(unet_model_small, model_num=f"unet_small_ep8")
 
     
     
