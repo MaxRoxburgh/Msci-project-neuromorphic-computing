@@ -30,14 +30,13 @@ def main(model, model_num, pad=False, ep=80):
     # getting data
     
     print('\nLoading Data...')
-    x, y = GAD.get_everything()
-    x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.05, random_state=77) # LUKA motherfuckin doncic
+    x_train, y_train = GAD.get_everything()
+    x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.05, random_state=77) # LUKA motherfuckin doncic
     n = x_val.shape[0]
     x_test, y_test = x_train[:n], y_train[:n]
     np.save("x_test_data.npy", x_test)
     np.save("y_test_data.npy", y_test) # save it for later
     x_train, y_train = x_train[n:], y_train[n:]
-    x_train, x_val, y_train, y_val = tf.stack(x_train), tf.stack(x_val), tf.stack(y_train), tf.stack(y_val)
 
     
     
@@ -98,7 +97,7 @@ def main(model, model_num, pad=False, ep=80):
     
     # train branch 1: large batch
     batch_size = 8
-    ep = 500
+    ep = 350
     print("batch size:", batch_size)
     print("epochs:", ep)
     history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=2, validation_data=[x_val, y_val],

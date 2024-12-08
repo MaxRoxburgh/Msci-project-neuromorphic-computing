@@ -42,7 +42,7 @@ def main(model, model_num, pad=False, ep=200):
     
     print('\nLoading Data...')
     x_train, x_val, y_train, y_val = GAD.get_all_data_and_mnist()
-    x_train, x_val, y_train, y_val = tf.stack(x_train), tf.stack(x_val), tf.stack(y_train), tf.stack(y_val)
+    # x_train, x_val, y_train, y_val = tf.stack(x_train), tf.stack(x_val), tf.stack(y_train), tf.stack(y_val)
     
     print(x_train.shape, x_val.shape, y_train.shape, y_val.shape)
     
@@ -97,7 +97,7 @@ def main(model, model_num, pad=False, ep=200):
     
     # train branch 1: large batch
     batch_size = 8
-    ep = 8
+    ep = 3
     print("batch size:", batch_size)
     print("epochs:", ep)
     history = autoencoder.fit(x=x_train, y=y_train, epochs=ep, verbose=2, validation_data=[x_val, y_val],
@@ -148,7 +148,7 @@ def main(model, model_num, pad=False, ep=200):
 
 from models import unet_model_small
 # main(unet_model_small, model_num=f"3_efftrain_mae_fixed_data", pad=True)    
-main(unet_model_small, model_num=f"unet_small_ep8")
+main(unet_model_small, model_num=f"test_for_np.array")
 
     
     

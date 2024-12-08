@@ -2,7 +2,9 @@ import datasets as ds
 import numpy as np
 import glob
 from tools import resample_imporved, multiplied, add_padding_to_images, spectrum_retrival
+from memory_profiler import profile
 
+@profile
 def mnist(path):
 
     power = 310
@@ -12,7 +14,7 @@ def mnist(path):
     spectrum_paths_MNIST = sorted([i.replace("\\", "/") for i in spectrum_paths_MNIST])
 
     x_mnist = 255 - ds.load(input_path).raw
-    x_mnist = multiplied(x_mnist, power)
+    x_mnist = multiplied(x_mnist, power)[:40000]
     x_mnist = resample_imporved(x_mnist, 133)
 
     y_mnist = ds.load(spectrum_paths_MNIST[0]).raw
@@ -23,6 +25,7 @@ def mnist(path):
 
     return x_mnist, y_mnist
 
+@profile
 def cifar10_gray(path):
     # Cifar10_gray
     
@@ -53,6 +56,7 @@ def cifar10_gray(path):
 
     return input_cifar_gray, y_cifar
 
+@profile
 def isic12_95(path):
 
     spectrum_paths_rot0 = glob.glob(path + "/data/isic12_95_gTrue_rot0_/*[0-9].ds")
@@ -94,6 +98,7 @@ def isic12_95(path):
 
     return x_total, y_total
 
+@profile
 def cifar10_colour(path):
     # Cifar10_colour
     
@@ -134,6 +139,7 @@ def cifar10_colour(path):
 
     return np.concatenate( (np.concatenate((input_cifar_r,input_cifar_g)),input_cifar_b) ), np.concatenate((np.concatenate((y_cifar_r,y_cifar_g)),y_cifar_b))
 
+@profile
 def breakhist(path):
     
     bh_specrtum_rot0_paths =  glob.glob(path + "/data/breakhist_div2_unquart_gTrue_rot0_/*[0-9].ds")

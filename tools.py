@@ -1,7 +1,7 @@
-from keras.layers import Conv2D, Dropout, AveragePooling2D, concatenate, Cropping2D
-import keras.backend as K 
-import numpy as np
-from tensorflow.keras.callbacks import Callback
+from keras.layers import Conv2D, Dropout, AveragePooling2D, concatenate, Cropping2D # type: ignore
+import keras.backend as K # type: ignore
+import numpy as np # type: ignore 
+from tensorflow.keras.callbacks import Callback # type: ignore
 
 def encoder_sub_block(input, NumFilter1, NumFilter2, KernelSize1, KernelSize2, DropoutRate, DonwsampleSize, ker_init='random_normal', activation='relu', debug=False, all_encoders=False):
     """
@@ -221,6 +221,31 @@ def resample_image_by_scale(image: np.ndarray, new_width: int) -> np.ndarray:
     return new_image
 
 def resample_imporved(images: np.ndarray, new_width: int) -> np.ndarray:
+    """
+    Takes a square image and resamples it to another square image of different 
+    dimensions
+    Principle behined it is finds the lowest common multiple of the new and old 
+    dimensions, then scales it up using np.repeat to be the size of the lcm, 
+    then takes an average over an intiger number of squares to downsample to 
+    new dimensions
+
+    improved time and efficiency of resample_image_by_scale() 
+    ----------
+    Parameters
+    ----------
+    image : np.ndarray
+        Square (n,n) array that will be resampled
+    new_width : int
+        width of new resampled image
+
+    -------
+    Returns
+    -------
+    new_image : np.ndarray
+        new resampled image dimesnsions (new_width, new_width)
+        
+    None if not a square
+    """
     if images.shape[1] != images.shape[2]:
         print("Not a square image")
         return None
@@ -252,12 +277,29 @@ def resample_imporved(images: np.ndarray, new_width: int) -> np.ndarray:
     return un_rot_image
 
 def resample_image_sp(images, new_size):
+    """
+    uses the scipy zoom function to rescale images using a 5th order interpolation
+    works on an entire array of images
+    ----------
+    Parameters
+    ----------
+    image : np.ndarray
+        Square (n,n) array that will be resampled
+    new_width : int
+        width of new resampled image
+
+    -------
+    Returns
+    -------
+    new_image : np.ndarray
+        new resampled image dimesnsions (new_width, new_width)
+    """
     zoom_scale = new_size/images.shape[1]
-    from scipy.ndimage import zoom
+    from scipy.ndimage import zoom # type: ignore
     return np.array([zoom(im, zoom_scale, order=5) for im in images])
 
 def spectrum_retrival(paths):
-    import datasets as ds
+    import datasets as ds # type: ignore
     
     total = ds.load(paths[0]).raw
     for i in paths[1:]:
@@ -269,9 +311,35 @@ def spectrum_retrival(paths):
     return total
 
 def multiplied(data, mult):
-    n = len(data)
+    """
+    multiplys each value in any dimentional array by mult
+    """
     mult_matrix = np.full(data.shape, mult)
     return data*mult_matrix
+    # another method that when tested was marginaly slower
+    # return np.array(data.flatten() * mult).reshape(data.shape)
+
+def log_scale_data(data, undo=False):
+    """
+    transforms data values b:y y = log(x+1) 
+    undo will do inverse transform: x = e^(y) - 1
+    """
+    if undo:
+        transformed_data = np.array(np.e**data.flatten() - 1)
+    else:
+        transformed_data = np.array(np.log(data.flatten() + 1)).reshape(data.shape)
+    return transformed_data.reshape(data.shape)
+
+def norm(data, reduction_factor=None):
+    if not reduction_factor:
+        flat_data = data.flatten()
+        reduction_factor = max(flat_data)
+        return (flat_data/reduction_factor).reshape(data.shape), reduction_factor
+    else:
+        flat_data = data.flatten()
+        return (flat_data/reduction_factor).reshape(data.shape)
+
+
 
 class TrendBasedEarlyStopping(Callback):
     def __init__(self, monitor_train='loss', monitor_val='val_loss', patience=5):
@@ -301,7 +369,7 @@ class TrendBasedEarlyStopping(Callback):
             self.diff_history[i] < self.diff_history[i + 1] for i in range(len(self.diff_history) - 1)
         ):
             print(f"Epoch {epoch + 1}: Overfitting trend detected (increasing val_loss - train_loss).")
-            print(f"Stopping training and reverting to the best weights from earlier epochs.")
+            print("Stopping training and reverting to the best weights from earlier epochs.")
             self.model.stop_training = True
             if self.best_weights:
                 self.model.set_weights(self.best_weights)

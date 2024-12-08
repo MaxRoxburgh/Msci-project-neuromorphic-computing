@@ -229,23 +229,23 @@ def get_everything(home=False):
         path = os.getcwd().replace("\\", "/") + "/twin_data"
     
     import GADtools as get_the_data_for
-    x, y = get_the_data_for.mnist(path)
-    print("mnist loaded")
+    x, y = get_the_data_for.cifar10_colour(path)
+    print("cifar10 coloured loaded")
 
     x_temp, y_temp = get_the_data_for.cifar10_gray(path)
     x = np.concatenate((x, x_temp))
     y = np.concatenate((y, y_temp))
     print("cifar10 grayscale loaded")
 
+    x_temp, y_temp = get_the_data_for.mnist(path)
+    x = np.concatenate((x, x_temp))
+    y = np.concatenate((y, y_temp))
+    print("mnist loaded")
+
     x_temp, y_temp = get_the_data_for.isic12_95(path)
     x = np.concatenate((x, x_temp))
     y = np.concatenate((y, y_temp))
     print("isic12_95 loaded")
-
-    x_temp, y_temp = get_the_data_for.cifar10_colour(path)
-    x = np.concatenate((x, x_temp))
-    y = np.concatenate((y, y_temp))
-    print("cifar10 coloured loaded")
 
     x_temp, y_temp = get_the_data_for.breakhist(path)
     x = np.concatenate((x, x_temp))
